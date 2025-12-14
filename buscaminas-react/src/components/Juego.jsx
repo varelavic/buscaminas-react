@@ -54,12 +54,12 @@ export default function Buscaminas() {
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
 
-  // ⏱️ Temporizador
+  // Temporizador
   const [time, setTime] = useState(0);
   const timerRef = useRef(null);
   const [started, setStarted] = useState(false);
 
-  // 🏆 Ranking
+  // Ranking
   const [ranking, setRanking] = useState(() => {
     return JSON.parse(localStorage.getItem("ranking")) || [];
   });
@@ -156,14 +156,29 @@ export default function Buscaminas() {
     setBoard(newBoard);
   };
 
-  const handleRightClick = (e, r, c) => {
-    e.preventDefault();
+  const handleFlag = (r, c) => {
     if (gameOver || won) return;
-
     const newBoard = board.map(row => row.map(cell => ({ ...cell })));
     const cell = newBoard[r][c];
     if (!cell.isRevealed) cell.isFlagged = !cell.isFlagged;
     setBoard(newBoard);
+  }
+
+  const handleRightClick = (e, r, c) => {
+    e.preventDefault();
+    handleFlag(r, c);
+  };
+
+  const longPressTimeout = useRef(null);
+
+  const handleTouchStart = (r, c) => {
+    longPressTimeout.current = setTimeout(() => {
+      handleFlag(r, c);
+    }, 500);
+  };
+
+  const handleTouchEnd = (r, c) => {
+    clearTimeout(longPressTimeout.current);
   };
 
   return (
@@ -208,6 +223,8 @@ export default function Buscaminas() {
               key={`${r}-${c}`}
               onClick={() => handleClick(r, c)}
               onContextMenu={e => handleRightClick(e, r, c)}
+              onTouchStart={() => handleTouchStart(r, c)}
+              onTouchEnd={() => handleTouchEnd(r, c)}
               className={`w-10 h-10 border border-gray-700 flex items-center justify-center cursor-pointer
                 ${cell.isRevealed ? "bg-gray-700" : "bg-gray-500 hover:bg-gray-400"}`}
             >
